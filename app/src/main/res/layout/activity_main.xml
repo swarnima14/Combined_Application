@@ -1,32 +1,175 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".MainActivity">
 
-    <LinearLayout
-        android:orientation="vertical"
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLay"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="3dp">
+        android:layout_height="?attr/actionBarSize"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:menu="@menu/main_menu"
+            style="@style/Theme.MaterialComponents.Light.DarkActionBar"/>
+
+    </com.google.android.material.appbar.AppBarLayout>
 
     <ImageButton
         android:id="@+id/btnCamera"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/camera"
-        android:layout_gravity="center_horizontal"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/appBarLay"/>
+
 
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="400dp"
         android:src="@color/cardview_dark_background"
-        android:layout_margin="8dp"/>
+        android:layout_margin="8dp"
+        android:scaleType="centerCrop"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnCamera"/>
+
+    <LinearLayout
+        android:id="@+id/layOne"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/imageView"
+        android:layout_margin="8dp"
+        android:padding="3dp"
+        android:gravity="center_horizontal">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnArea"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Get Area"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:padding="3dp"
+        android:layout_margin="5dp"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnClassify"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Classify"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:padding="3dp"
+        android:layout_margin="5dp"/>
 
     </LinearLayout>
 
-    <FrameLayout
+    <LinearLayout
+        android:id="@+id/layTwo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layOne"
+        android:gravity="center_horizontal"
+        android:layout_margin="8dp"
+        android:padding="3dp">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDiseased"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Check health"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:padding="3dp"
+        android:layout_margin="5dp"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Label"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:padding="3dp"
+        android:layout_margin="5dp"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layThree"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layTwo"
+        android:weightSum="2"
+        android:layout_margin="5dp">
+
+        <TextView
+            android:id="@+id/tvArea"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Area: "
+            android:gravity="center"
+            android:padding="3dp"/>
+
+        <TextView
+            android:id="@+id/tvCropName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Crop Name: "
+            android:gravity="center"
+            android:padding="3dp"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layThree"
+        android:weightSum="2"
+        android:layout_margin="5dp">
+
+        <TextView
+            android:id="@+id/tvHealth"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Description: "
+            android:gravity="center"
+            android:padding="3dp"/>
+
+        <TextView
+            android:id="@+id/tvLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Label: "
+            android:gravity="center"
+            android:padding="3dp"/>
+
+    </LinearLayout>
+
+    <!--<FrameLayout
         android:id="@+id/sheet"
         android:layout_width="match_parent"
         android:layout_height="350dp"
@@ -93,6 +236,6 @@
 
         </LinearLayout>
 
-    </FrameLayout>
+    </FrameLayout>-->
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

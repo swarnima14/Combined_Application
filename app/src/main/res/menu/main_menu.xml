@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:id="@+id/menuSaveOffline"
+        android:title="SAVE OFFLINE"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/menuUpload"
+        android:title="UPLOAD"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/menuReset"
+        android:title="RESET"
+        app:showAsAction="never"/>
+
+</menu>
