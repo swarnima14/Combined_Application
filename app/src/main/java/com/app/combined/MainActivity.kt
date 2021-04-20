@@ -87,7 +87,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun openCamera() {
 
-        //tvCropName.text = "Crop Name: "
         val camIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
 
         photoFile = getFileName(FILENAME)
