@@ -24,7 +24,7 @@ import java.io.File
 class MainActivity : AppCompatActivity() {
 
     val FILENAME = "pic"
-    lateinit var photoFile: File
+    var photoFile: File? = null
     lateinit var fileProvider: Uri
     var bitmap: Bitmap? = null
     lateinit var uri: Uri
@@ -56,6 +56,22 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
         }
 
+        btnDiseased.setOnClickListener {
+
+            if(bitmap != null && photoFile!= null){
+                val fileName = "disease.txt"
+                val inpString = application.assets.open(fileName).bufferedReader().use { it.readText() }
+                val cropList = inpString.split("\n")
+
+                val check = DiseaseDetection(bitmap!!, this, cropList)
+                var name = check.predictName()
+                tvHealth.text = "Health Description: "
+                tvHealth.append(name)
+            }
+            else
+                Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
+        }
+
     }
 
     /*override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -65,8 +81,8 @@ class MainActivity : AppCompatActivity() {
     }*/
 
     private fun checkForPermission() {
-        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 100)
+        if(ActivityCompat.checkSelfPermission(this, arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE).toString()) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE), 100)
         }
         else
         openCamera()
@@ -86,6 +102,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openCamera() {
+        reset()
 
         val camIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
 
@@ -94,6 +111,14 @@ class MainActivity : AppCompatActivity() {
         fileProvider = FileProvider.getUriForFile(this, "com.app.combined.fileprovider", photoFile!!)
         camIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileProvider)
         startActivityForResult(camIntent, 1)
+    }
+
+    private fun reset() {
+        photoFile = null
+        imageView.setImageBitmap(null)
+        tvCropName.text = "Crop Name: "
+        tvHealth.text = "Health description: "
+        tvArea.text = "Area: "
     }
 
     private fun getFileName(filename: String): File {

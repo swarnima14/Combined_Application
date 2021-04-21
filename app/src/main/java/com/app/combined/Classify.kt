@@ -12,7 +12,7 @@ import java.nio.ByteOrder
 class Classify(var bitmap: Bitmap, val context: Context, val cropList: List<String>) {
 
 
-    var output: ByteBuffer? = null
+    lateinit var output: ByteBuffer
 
     fun predictName(): String {
         val model = Model.newInstance(context)
@@ -24,7 +24,7 @@ class Classify(var bitmap: Bitmap, val context: Context, val cropList: List<Stri
 
         output = convertBitmapToByteBuffer(resized)
 
-        inputFeature0.loadBuffer(output!!)
+        inputFeature0.loadBuffer(output)
 
         // Runs model inference and gets result.
         val outputs = model.process(inputFeature0)
