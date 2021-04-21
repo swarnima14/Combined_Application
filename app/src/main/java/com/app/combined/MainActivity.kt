@@ -13,15 +13,26 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import kotlinx.android.synthetic.main.activity_main.*
+import okhttp3.MultipartBody
+import pyxis.uzuki.live.mediaresizer.MediaResizer
+import pyxis.uzuki.live.mediaresizer.data.ImageResizeOption
+import pyxis.uzuki.live.mediaresizer.data.ResizeOption
+import pyxis.uzuki.live.mediaresizer.model.ImageMode
+import pyxis.uzuki.live.mediaresizer.model.ScanRequest
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.File
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback {
 
     val FILENAME = "pic"
     var photoFile: File? = null
@@ -72,6 +83,43 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
         }
 
+        btnArea.setOnClickListener {
+
+            if(bitmap != null && photoFile != null){
+                sendImage()
+            }
+            else
+                Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
+
+        }
+
+    }
+
+    private fun sendImage() {
+        progressBar.progress = 0
+        progressBar.visibility = View.VISIBLE
+        val body = UploadRequestBody(photoFile!!, "multipart/form-data", this)
+
+        MyAPI().uploadImage(
+            MultipartBody.Part.createFormData("image", photoFile!!.name, body)
+        ).enqueue(object: Callback<Number> {
+            override fun onFailure(call: Call<Number>, t: Throwable) {
+                progressBar.progress = 0
+                progressBar.visibility = View.GONE
+                Toast.makeText(this@MainActivity, "Error: "+t.message, Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onResponse(
+                call: Call<Number>,
+                response: Response<Number>
+            ) {
+                progressBar.progress = 100
+                progressBar.visibility = View.GONE
+                Toast.makeText(this@MainActivity, "Uploaded", Toast.LENGTH_SHORT).show()
+                tvArea.text = "Area: ${response.body()}"
+            }
+
+        })
     }
 
     /*override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -107,7 +155,6 @@ class MainActivity : AppCompatActivity() {
         val camIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
 
         photoFile = getFileName(FILENAME)
-       // Toast.makeText(this, "cam", Toast.LENGTH_SHORT).show()
         fileProvider = FileProvider.getUriForFile(this, "com.app.combined.fileprovider", photoFile!!)
         camIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileProvider)
         startActivityForResult(camIntent, 1)
@@ -134,8 +181,38 @@ class MainActivity : AppCompatActivity() {
             bitmap = BitmapFactory.decodeFile(photoFile!!.path)
             imageView.setImageBitmap(bitmap)
 
+            val resizeOption = ImageResizeOption.Builder()
+                .setImageProcessMode(ImageMode.ResizeAndCompress)
+                .setImageResolution(1280, 720)
+                .setBitmapFilter(false)
+                .setCompressFormat(Bitmap.CompressFormat.JPEG)
+                .setCompressQuality(75)
+                .setScanRequest(ScanRequest.TRUE)
+                .build()
+
+            val option = ResizeOption.Builder()
+                .setMediaType(pyxis.uzuki.live.mediaresizer.model.MediaType.IMAGE)
+                .setImageResizeOption(resizeOption)
+                .setTargetPath(photoFile!!.absolutePath)
+                .setOutputPath(photoFile!!.absolutePath)
+                .build()
+
+            MediaResizer.process(option)
+
             uri = Uri.fromFile(photoFile)
         }
+    }
+
+    override fun onProgressUpdate(percentage: Int) {
+        progressBar.progress = percentage
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+
+        progressBar.visibility = View.GONE
+        //imageView.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.no_image))
+
     }
 
 }

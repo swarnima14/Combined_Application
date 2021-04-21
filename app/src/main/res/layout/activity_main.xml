@@ -23,6 +23,26 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:layout_margin="5dp"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/imageView"
+        android:visibility="gone"
+        android:forceDarkAllowed="false"/>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideTop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.09"
+        app:layout_constraintTop_toTopOf="parent"/>
+
     <ImageButton
         android:id="@+id/btnCamera"
         android:layout_width="wrap_content"
@@ -30,7 +50,7 @@
         android:src="@drawable/camera"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/appBarLay"/>
+        app:layout_constraintTop_toBottomOf="@id/guideTop"/>
 
 
     <ImageView
@@ -146,6 +166,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/layThree"
+        app:layout_constraintBottom_toTopOf="@+id/guideBottom"
         android:weightSum="2"
         android:layout_margin="5dp">
 
@@ -168,6 +189,14 @@
             android:padding="3dp"/>
 
     </LinearLayout>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideBottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.99"
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <!--<FrameLayout
         android:id="@+id/sheet"
