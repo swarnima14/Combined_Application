@@ -7,7 +7,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.ExifInterface
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
@@ -15,6 +17,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -30,6 +33,8 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.io.File
+import java.io.IOException
+import java.io.InputStream
 
 
 class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback {
@@ -50,10 +55,43 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback {
         btnCamera.setOnClickListener {
             checkForPermission()
         }
+        btnLabel.setOnClickListener {
+            setLabel()
+        }
 
-        btnClassify.setOnClickListener {
+    }
 
-            if(bitmap != null && photoFile!= null){
+    private fun setLabel() {
+        val bottomSheetFragment = BottomSheet(photoFile!!)
+        bottomSheetFragment.show(supportFragmentManager, "modal sheet")
+    }
+
+    private fun getArea() {
+        if(bitmap != null && photoFile != null){
+            sendImage()
+        }
+        else
+            Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun getHealthStatus() {
+        if(bitmap != null && photoFile!= null){
+            val fileName = "disease.txt"
+            val inpString = application.assets.open(fileName).bufferedReader().use { it.readText() }
+            val cropList = inpString.split("\n")
+
+            val check = DiseaseDetection(bitmap!!, this, cropList)
+            var name = check.predictName()
+            tvHealth.text = "Health Description: "
+            tvHealth.append(name)
+        }
+        else
+            Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun getCropName() {
+
+        if(bitmap != null && photoFile!= null){
             val fileName = "cropname.txt"
             val inpString = application.assets.open(fileName).bufferedReader().use { it.readText() }
             val cropList = inpString.split("\n")
@@ -62,37 +100,9 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback {
             var name = classify.predictName()
             tvCropName.text = "Crop Name: "
             tvCropName.append(name)
-            }
-            else
-                Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
         }
-
-        btnDiseased.setOnClickListener {
-
-            if(bitmap != null && photoFile!= null){
-                val fileName = "disease.txt"
-                val inpString = application.assets.open(fileName).bufferedReader().use { it.readText() }
-                val cropList = inpString.split("\n")
-
-                val check = DiseaseDetection(bitmap!!, this, cropList)
-                var name = check.predictName()
-                tvHealth.text = "Health Description: "
-                tvHealth.append(name)
-            }
-            else
-                Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
-        }
-
-        btnArea.setOnClickListener {
-
-            if(bitmap != null && photoFile != null){
-                sendImage()
-            }
-            else
-                Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
-
-        }
-
+        else
+            Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
     }
 
     private fun sendImage() {
@@ -124,9 +134,11 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback {
 
     /*override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val inflater = menuInflater
-        inflater.inflate(R.me, menu)
+        inflater.inflate(com.app.combined.R.menu.main_menu, menu)
         return true
     }*/
+
+
 
     private fun checkForPermission() {
         if(ActivityCompat.checkSelfPermission(this, arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE).toString()) != PackageManager.PERMISSION_GRANTED){
@@ -200,6 +212,11 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback {
             MediaResizer.process(option)
 
             uri = Uri.fromFile(photoFile)
+
+            getCropName()
+            getHealthStatus()
+            getArea()
+
         }
     }
 

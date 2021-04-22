@@ -64,7 +64,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnCamera"/>
 
-    <LinearLayout
+    <!--<LinearLayout
         android:id="@+id/layOne"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -126,7 +126,7 @@
         android:padding="3dp"
         android:layout_margin="5dp"/>
 
-    </LinearLayout>
+    </LinearLayout>-->
 
     <LinearLayout
         android:id="@+id/layThree"
@@ -135,7 +135,7 @@
         android:orientation="horizontal"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layTwo"
+        app:layout_constraintTop_toBottomOf="@id/imageView"
         android:weightSum="2"
         android:layout_margin="5dp">
 
@@ -160,13 +160,13 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/layFour"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/layThree"
-        app:layout_constraintBottom_toTopOf="@+id/guideBottom"
         android:weightSum="2"
         android:layout_margin="5dp">
 
@@ -190,13 +190,27 @@
 
     </LinearLayout>
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Label"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:padding="3dp"
+        android:layout_margin="5dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layFour"/>
+
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideBottom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.99"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintGuide_percent="0.96"
+        app:layout_constraintTop_toBottomOf="@id/btnLabel"/>
+
+
 
     <!--<FrameLayout
         android:id="@+id/sheet"
@@ -232,24 +246,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Classify"
-                android:textSize="16sp"
-                android:padding="8dp"
-                android:textColor="@color/white"/>
-
-            <TextView
-                android:id="@+id/tvLabel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Label"
-                android:textSize="16sp"
-                android:padding="8dp"
-                android:textColor="@color/white"/>
-
-            <TextView
-                android:id="@+id/tvArea"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Get Ares"
                 android:textSize="16sp"
                 android:padding="8dp"
                 android:textColor="@color/white"/>
