@@ -1,15 +1,12 @@
 package com.app.combined
 
 import android.Manifest
-import android.R
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.media.ExifInterface
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
@@ -17,7 +14,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -33,11 +29,9 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.io.File
-import java.io.IOException
-import java.io.InputStream
 
-
-class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback {
+class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback,
+    androidx.appcompat.widget.Toolbar.OnMenuItemClickListener {
 
     val FILENAME = "pic"
     var photoFile: File? = null
@@ -50,7 +44,8 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback {
         setContentView(com.app.combined.R.layout.activity_main)
 
         toolbar.title = "Combined App"
-
+        setSupportActionBar(toolbar)
+        toolbar.setOnMenuItemClickListener(this)
 
         btnCamera.setOnClickListener {
             checkForPermission()
@@ -117,6 +112,7 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback {
                 progressBar.progress = 0
                 progressBar.visibility = View.GONE
                 Toast.makeText(this@MainActivity, "Error: "+t.message, Toast.LENGTH_SHORT).show()
+                tvArea.text = "Area: Timeout"
             }
 
             override fun onResponse(
@@ -132,13 +128,21 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback {
         })
     }
 
-    /*override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        super.onCreateOptionsMenu(menu)
         val inflater = menuInflater
-        inflater.inflate(com.app.combined.R.menu.main_menu, menu)
+        inflater.inflate(R.menu.main_menu, menu)
         return true
-    }*/
+    }
 
-
+    override fun onMenuItemClick(item: MenuItem?): Boolean {
+        when(item!!.itemId){
+            R.id.menuReset-> Toast.makeText(this, "reset", Toast.LENGTH_SHORT).show()
+            R.id.menuUpload-> Toast.makeText(this, "upload", Toast.LENGTH_SHORT).show()
+            R.id.menuSaveOffline-> Toast.makeText(this, "offline", Toast.LENGTH_SHORT).show()
+        }
+        return true
+    }
 
     private fun checkForPermission() {
         if(ActivityCompat.checkSelfPermission(this, arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE).toString()) != PackageManager.PERMISSION_GRANTED){
@@ -226,10 +230,8 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback {
 
     override fun onBackPressed() {
         super.onBackPressed()
-
         progressBar.visibility = View.GONE
-        //imageView.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.no_image))
-
+        imageView.setImageDrawable(ContextCompat.getDrawable(this, com.app.combined.R.drawable.no_image))
     }
 
 }

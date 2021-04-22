@@ -12,14 +12,15 @@
         android:layout_height="?attr/actionBarSize"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        android:theme="@style/Widget.AppCompat.PopupMenu">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:menu="@menu/main_menu"
-            style="@style/Theme.MaterialComponents.Light.DarkActionBar"/>
+            style="@style/Widget.AppCompat.PopupMenu"/>
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -57,9 +58,9 @@
         android:id="@+id/imageView"
         android:layout_width="match_parent"
         android:layout_height="400dp"
-        android:src="@color/cardview_dark_background"
+        android:src="@drawable/no_image"
         android:layout_margin="8dp"
-        android:scaleType="centerCrop"
+        android:scaleType="fitXY"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnCamera"/>
