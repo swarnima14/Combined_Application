@@ -1,4 +1,4 @@
-package com.app.combined
+package com.app.combined.apiarea
 
 import okhttp3.MultipartBody
 import retrofit2.Call
@@ -18,7 +18,7 @@ interface MyAPI {
 
     companion object{
 
-        operator fun invoke(): MyAPI{
+        operator fun invoke(): MyAPI {
             return Retrofit.Builder()
                 .baseUrl("https://plant-area.herokuapp.com/")
                 .addConverterFactory(GsonConverterFactory.create())

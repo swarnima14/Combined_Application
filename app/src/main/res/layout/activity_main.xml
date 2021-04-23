@@ -65,7 +65,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnCamera"/>
 
-    <!--<LinearLayout
+    <LinearLayout
         android:id="@+id/layOne"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -95,55 +95,32 @@
         android:padding="3dp"
         android:layout_margin="5dp"/>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDiseased"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Check health"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:padding="3dp"
+            android:layout_margin="5dp"/>
+
     </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/layTwo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layOne"
-        android:gravity="center_horizontal"
-        android:layout_margin="8dp"
-        android:padding="3dp">
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnDiseased"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Check health"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-        android:padding="3dp"
-        android:layout_margin="5dp"/>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Label"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-        android:padding="3dp"
-        android:layout_margin="5dp"/>
-
-    </LinearLayout>-->
 
     <LinearLayout
         android:id="@+id/layThree"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/imageView"
-        android:weightSum="2"
+        app:layout_constraintTop_toBottomOf="@id/layOne"
+        android:weightSum="3"
         android:layout_margin="5dp">
 
         <TextView
             android:id="@+id/tvArea"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:text="Area: "
             android:gravity="center"
@@ -151,10 +128,19 @@
 
         <TextView
             android:id="@+id/tvCropName"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:text="Crop Name: "
+            android:gravity="center"
+            android:padding="3dp"/>
+
+        <TextView
+            android:id="@+id/tvHealth"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:text="Health description: "
             android:gravity="center"
             android:padding="3dp"/>
 
@@ -171,37 +157,10 @@
         android:weightSum="2"
         android:layout_margin="5dp">
 
-        <TextView
-            android:id="@+id/tvHealth"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Health description: "
-            android:gravity="center"
-            android:padding="3dp"/>
 
-        <TextView
-            android:id="@+id/tvLabel"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Label: "
-            android:gravity="center"
-            android:padding="3dp"/>
 
     </LinearLayout>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Label"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-        android:padding="3dp"
-        android:layout_margin="5dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layFour"/>
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideBottom"
@@ -209,7 +168,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.96"
-        app:layout_constraintTop_toBottomOf="@id/btnLabel"/>
+        app:layout_constraintTop_toBottomOf="@id/layFour"/>
 
 
 

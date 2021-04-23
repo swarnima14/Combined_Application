@@ -1,8 +1,7 @@
-package com.app.combined
+package com.app.combined.mlmodel
 
 import android.content.Context
 import android.graphics.Bitmap
-import androidx.appcompat.app.AppCompatActivity
 import com.app.combined.ml.Model
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer

@@ -18,6 +18,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.app.combined.apiarea.MyAPI
+import com.app.combined.apiarea.UploadRequestBody
+import com.app.combined.mlmodel.Classify
+import com.app.combined.mlmodel.DiseaseDetection
+import com.app.combined.storage.SaveOffline
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.MultipartBody
 import pyxis.uzuki.live.mediaresizer.MediaResizer
@@ -38,6 +43,8 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback,
     lateinit var fileProvider: Uri
     var bitmap: Bitmap? = null
     lateinit var uri: Uri
+    var health ="Invalid"
+    var cropName = "Invalid"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,16 +57,18 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback,
         btnCamera.setOnClickListener {
             checkForPermission()
         }
-        btnLabel.setOnClickListener {
-            setLabel()
+        btnClassify.setOnClickListener {
+            getCropName()
+        }
+        btnDiseased.setOnClickListener {
+            getHealthStatus()
+        }
+        btnArea.setOnClickListener {
+            getArea()
         }
 
     }
 
-    private fun setLabel() {
-        val bottomSheetFragment = BottomSheet(photoFile!!)
-        bottomSheetFragment.show(supportFragmentManager, "modal sheet")
-    }
 
     private fun getArea() {
         if(bitmap != null && photoFile != null){
@@ -76,9 +85,9 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback,
             val cropList = inpString.split("\n")
 
             val check = DiseaseDetection(bitmap!!, this, cropList)
-            var name = check.predictName()
+            health = check.predictName()
             tvHealth.text = "Health Description: "
-            tvHealth.append(name)
+            tvHealth.append(health)
         }
         else
             Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
@@ -92,9 +101,9 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback,
             val cropList = inpString.split("\n")
 
             val classify = Classify(bitmap!!, this, cropList)
-            var name = classify.predictName()
+            cropName = classify.predictName()
             tvCropName.text = "Crop Name: "
-            tvCropName.append(name)
+            tvCropName.append(cropName)
         }
         else
             Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
@@ -139,7 +148,15 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback,
         when(item!!.itemId){
             R.id.menuReset-> Toast.makeText(this, "reset", Toast.LENGTH_SHORT).show()
             R.id.menuUpload-> Toast.makeText(this, "upload", Toast.LENGTH_SHORT).show()
-            R.id.menuSaveOffline-> Toast.makeText(this, "offline", Toast.LENGTH_SHORT).show()
+            R.id.menuSaveOffline-> {
+                if(health != "Invalid" || cropName != "Invalid") {
+                    val saveOffline = SaveOffline(photoFile!!, cropName, health, this)
+                    saveOffline.saveInDevice()
+                }
+                else
+                    Toast.makeText(this, "Could not save", Toast.LENGTH_SHORT).show()
+            }
+            R.id.menuLabel-> Toast.makeText(this, "label", Toast.LENGTH_SHORT).show()
         }
         return true
     }
@@ -216,10 +233,6 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback,
             MediaResizer.process(option)
 
             uri = Uri.fromFile(photoFile)
-
-            getCropName()
-            getHealthStatus()
-            getArea()
 
         }
     }
