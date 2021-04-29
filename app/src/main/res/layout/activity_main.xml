@@ -4,23 +4,20 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".MainActivity">
+    tools:context=".activities.MainActivity">
 
     <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/appBarLay"
+        android:id="@+id/appBarPre"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:theme="@style/Widget.AppCompat.PopupMenu">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
+            android:id="@+id/toolbarPre"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:menu="@menu/main_menu"
-            style="@style/Widget.AppCompat.PopupMenu"/>
+            android:layout_height="match_parent"/>
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -66,54 +63,13 @@
         app:layout_constraintTop_toBottomOf="@id/btnCamera"/>
 
     <LinearLayout
-        android:id="@+id/layOne"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/imageView"
-        android:layout_margin="8dp"
-        android:padding="3dp"
-        android:gravity="center_horizontal">
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnArea"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Get Area"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-        android:padding="3dp"
-        android:layout_margin="5dp"/>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnClassify"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Classify"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-        android:padding="3dp"
-        android:layout_margin="5dp"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnDiseased"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Check health"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:padding="3dp"
-            android:layout_margin="5dp"/>
-
-    </LinearLayout>
-
-    <LinearLayout
         android:id="@+id/layThree"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layOne"
+        app:layout_constraintTop_toBottomOf="@id/imageView"
         android:weightSum="3"
         android:layout_margin="5dp">
 
@@ -147,17 +103,35 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/layFour"
+        android:id="@+id/layOne"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/layThree"
-        android:weightSum="2"
-        android:layout_margin="5dp">
+        android:layout_margin="8dp"
+        android:padding="3dp"
+        android:gravity="center_horizontal">
 
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/preUpload"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Upload"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:padding="3dp"
+            android:layout_margin="5dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/preOffline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Save Offline"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:padding="3dp"
+            android:layout_margin="5dp"/>
 
     </LinearLayout>
 
@@ -168,7 +142,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.96"
-        app:layout_constraintTop_toBottomOf="@id/layFour"/>
+        app:layout_constraintTop_toBottomOf="@id/layThree"/>
 
 
 

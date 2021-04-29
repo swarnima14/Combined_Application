@@ -1,4 +1,4 @@
-package com.app.combined
+package com.app.combined.activities
 
 import android.Manifest
 import android.app.Activity
@@ -10,14 +10,13 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.app.combined.R
 import com.app.combined.apiarea.MyAPI
 import com.app.combined.apiarea.UploadRequestBody
 import com.app.combined.mlmodel.Classify
@@ -35,8 +34,8 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.io.File
 
-class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback,
-    androidx.appcompat.widget.Toolbar.OnMenuItemClickListener {
+class MainActivity : AppCompatActivity(),
+    UploadRequestBody.UploadCallback{
 
     val FILENAME = "pic"
     var photoFile: File? = null
@@ -48,23 +47,22 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback,
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(com.app.combined.R.layout.activity_main)
+        setContentView(R.layout.activity_main)
 
-        toolbar.title = "Combined App"
-        setSupportActionBar(toolbar)
-        toolbar.setOnMenuItemClickListener(this)
+        toolbarPre.title = "Combined App"
+        setSupportActionBar(toolbarPre)
 
         btnCamera.setOnClickListener {
             checkForPermission()
         }
-        btnClassify.setOnClickListener {
-            getCropName()
-        }
-        btnDiseased.setOnClickListener {
-            getHealthStatus()
-        }
-        btnArea.setOnClickListener {
-            getArea()
+
+        preOffline.setOnClickListener {
+            if(health != "Invalid" || cropName != "Invalid") {
+                val saveOffline = SaveOffline(photoFile!!, cropName, health, this, "predict")
+                saveOffline.saveInDevice()
+            }
+            else
+                Toast.makeText(this, "Could not save", Toast.LENGTH_SHORT).show()
         }
 
     }
@@ -137,7 +135,7 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback,
         })
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    /*override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         super.onCreateOptionsMenu(menu)
         val inflater = menuInflater
         inflater.inflate(R.menu.main_menu, menu)
@@ -146,20 +144,23 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback,
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
         when(item!!.itemId){
-            R.id.menuReset-> Toast.makeText(this, "reset", Toast.LENGTH_SHORT).show()
-            R.id.menuUpload-> Toast.makeText(this, "upload", Toast.LENGTH_SHORT).show()
-            R.id.menuSaveOffline-> {
+            R.id.menuReset -> Toast.makeText(this, "reset", Toast.LENGTH_SHORT).show()
+            /*R.id.menuUpload -> Toast.makeText(this, "upload", Toast.LENGTH_SHORT).show()
+            R.id.menuSaveOffline -> {
                 if(health != "Invalid" || cropName != "Invalid") {
                     val saveOffline = SaveOffline(photoFile!!, cropName, health, this)
                     saveOffline.saveInDevice()
                 }
                 else
                     Toast.makeText(this, "Could not save", Toast.LENGTH_SHORT).show()
+            }*/
+            R.id.menuLabel -> {
+                startActivity(Intent(this, LabelActivity::class.java))
+                Toast.makeText(this, "label", Toast.LENGTH_SHORT).show()
             }
-            R.id.menuLabel-> Toast.makeText(this, "label", Toast.LENGTH_SHORT).show()
         }
         return true
-    }
+    }*/
 
     private fun checkForPermission() {
         if(ActivityCompat.checkSelfPermission(this, arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE).toString()) != PackageManager.PERMISSION_GRANTED){
@@ -234,6 +235,10 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback,
 
             uri = Uri.fromFile(photoFile)
 
+            getCropName()
+            getHealthStatus()
+            getArea()
+
         }
     }
 
@@ -244,7 +249,9 @@ class MainActivity : AppCompatActivity(), UploadRequestBody.UploadCallback,
     override fun onBackPressed() {
         super.onBackPressed()
         progressBar.visibility = View.GONE
-        imageView.setImageDrawable(ContextCompat.getDrawable(this, com.app.combined.R.drawable.no_image))
+        imageView.setImageDrawable(ContextCompat.getDrawable(this,
+            R.drawable.no_image
+        ))
     }
 
 }

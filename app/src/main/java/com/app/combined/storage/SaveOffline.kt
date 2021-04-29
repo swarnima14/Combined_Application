@@ -8,7 +8,13 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
-class SaveOffline(val file:File, val cropName: String, val health: String, val context: Context) {
+class SaveOffline(
+    val file: File,
+    val cropName: String,
+    val health: String,
+    val context: Context,
+    val s: String
+) {
 
     var count = 0
     internal var myExternalFile: File?=null
@@ -16,18 +22,25 @@ class SaveOffline(val file:File, val cropName: String, val health: String, val c
 
     fun saveInDevice() {
 
-        if(cropName == "Invalid"){
-            finalName = health.toUpperCase()
-        }
-        else if(health == "Invalid"){
-            finalName = cropName.toUpperCase()
+        if(s != "label") {
+            if (cropName == "Invalid") {
+                finalName = health.toUpperCase()
+            } else if (health == "Invalid") {
+                finalName = cropName.toUpperCase()
+            } else {
+                finalName = cropName.toUpperCase() + health.toUpperCase()
+            }
         }
         else{
-            finalName = cropName.toUpperCase() + health.toUpperCase()
+            if (cropName == "Invalid" || cropName == null) {
+                finalName = "MANUAL"
+            } else {
+                finalName = cropName.toUpperCase() + "MANUAL"
+            }
         }
 
         if(File(context.getExternalFilesDir(finalName).toString()).exists()){
-           count = getNumberOfFiles(file)
+           count = context.getExternalFilesDir(finalName)?.let { getNumberOfFiles(it) }!!
         }
         count++
 
