@@ -3,10 +3,15 @@ package com.app.combined.storage
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.ExifInterface
+import android.net.Uri
+import android.os.Build
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
 
 class SaveOffline(
     val file: File,
@@ -20,6 +25,7 @@ class SaveOffline(
     internal var myExternalFile: File?=null
     internal var finalName: String? = null
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     fun saveInDevice() {
 
         if(s != "label") {
@@ -50,6 +56,9 @@ class SaveOffline(
         try{
             var bitmap = BitmapFactory.decodeFile(file.absolutePath)
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream)
+            if(s=="label"){
+                extractTag(file, health)
+            }
             fileOutputStream.close()
             file.delete()
             Toast.makeText(context, "Saved in your device.", Toast.LENGTH_SHORT).show()
@@ -65,5 +74,35 @@ class SaveOffline(
             return files.size
         }
         return 0
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    fun extractTag(f: File, label: String){
+        val inpS: InputStream?
+        inpS = context!!.contentResolver.openInputStream(Uri.fromFile(f))
+
+        try {
+
+            val exifInterface =  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                ExifInterface(f)
+            } else {
+                TODO("VERSION.SDK_INT < N")
+            }
+
+            exifInterface.setAttribute(ExifInterface.TAG_MAKER_NOTE,label)
+            exifInterface.saveAttributes()
+
+        } catch (e: IOException) {
+            Toast.makeText(context, "Error: "+e.message, Toast.LENGTH_SHORT).show()
+            // Handle any errors
+        } finally {
+            if (inpS != null) {
+                try {
+                    inpS.close()
+                } catch (ignored: IOException) {
+                }
+            }
+        }
+
     }
 }

@@ -1,14 +1,185 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.PredictFragment">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+
+    <ProgressBar
+        android:id="@+id/progressBar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="3dp"
+        android:layout_margin="5dp"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/imageView"
+        android:visibility="gone"
+        android:forceDarkAllowed="false"/>
 
-</FrameLayout>
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideTop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.04"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <ImageButton
+        android:id="@+id/btnCamera"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/camera"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/guideTop"/>
+
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:src="@drawable/no_image"
+        android:layout_margin="8dp"
+        android:scaleType="fitXY"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnCamera"/>
+
+    <LinearLayout
+        android:id="@+id/layThree"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/imageView"
+        android:weightSum="3"
+        android:layout_margin="5dp">
+
+        <TextView
+            android:id="@+id/tvArea"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:text="Area: "
+            android:gravity="center"
+            android:padding="3dp"/>
+
+        <TextView
+            android:id="@+id/tvCropName"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:text="Crop Name: "
+            android:gravity="center"
+            android:padding="3dp"/>
+
+        <TextView
+            android:id="@+id/tvHealth"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:text="Health description: "
+            android:gravity="center"
+            android:padding="3dp"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layOne"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layThree"
+        android:layout_margin="8dp"
+        android:padding="3dp"
+        android:gravity="center_horizontal">
+
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/preUpload"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Upload"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:padding="3dp"
+            android:layout_margin="5dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/preOffline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Save Offline"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:padding="3dp"
+            android:layout_margin="5dp"/>
+
+    </LinearLayout>
+
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideBottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.96"
+        app:layout_constraintTop_toBottomOf="@id/layThree"/>
+
+
+
+    <!--<FrameLayout
+        android:id="@+id/sheet"
+        android:layout_width="match_parent"
+        android:layout_height="350dp"
+        android:background="@drawable/background_bottomsheet"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="3dp">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:src="@drawable/drag"/>
+
+            <TextView
+                android:id="@+id/tvChoose"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="CHOOSE ACTION"
+                android:gravity="center_horizontal"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"/>
+
+            <TextView
+                android:id="@+id/tvClassify"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Classify"
+                android:textSize="16sp"
+                android:padding="8dp"
+                android:textColor="@color/white"/>
+
+            <TextView
+                android:id="@+id/tvDiseased"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Disease detection"
+                android:textSize="16sp"
+                android:padding="8dp"
+                android:textColor="@color/white"/>
+
+        </LinearLayout>
+
+    </FrameLayout>-->
+
+</androidx.constraintlayout.widget.ConstraintLayout>
