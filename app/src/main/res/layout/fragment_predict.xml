@@ -97,17 +97,17 @@
         app:layout_constraintTop_toBottomOf="@id/layThree"
         android:layout_margin="8dp"
         android:padding="3dp"
-        android:gravity="center_horizontal">
+        android:gravity="center">
 
 
-        <com.google.android.material.button.MaterialButton
+        <!--<com.google.android.material.button.MaterialButton
             android:id="@+id/preUpload"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Upload"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:padding="3dp"
-            android:layout_margin="5dp"/>
+            android:layout_margin="5dp"/>-->
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/preOffline"

@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.media.ExifInterface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -20,7 +19,6 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.app.combined.R
@@ -38,8 +36,6 @@ import pyxis.uzuki.live.mediaresizer.model.ImageMode
 import pyxis.uzuki.live.mediaresizer.model.MediaType
 import pyxis.uzuki.live.mediaresizer.model.ScanRequest
 import java.io.File
-import java.io.IOException
-import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -65,6 +61,90 @@ class LabelFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
+
+    }
+
+    private fun setDropdown(v: View)
+    {
+
+        val reference = FirebaseDatabase.getInstance().reference.child("Types")
+
+        val postListener = object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                if(dataSnapshot.hasChildren()){
+
+                    for (child in dataSnapshot.children) {
+
+                        if(!list.contains(child.key.toString()))
+                            list.add(child.key.toString())
+
+                    }
+                }
+                setAdapter(v)
+
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+
+                Toast.makeText(context, databaseError.message,Toast.LENGTH_SHORT).show()
+            }
+        }
+        reference.addValueEventListener(postListener)
+
+    }
+
+    fun setAdapter(v: View)
+    {
+        val adapter: ArrayAdapter<String> = ArrayAdapter<String>(
+            context!!,
+            android.R.layout.simple_expandable_list_item_1,
+            list
+        )
+
+        v.etName.setAdapter(adapter)
+        v.etName.setOnItemClickListener { parent, view, position, id ->
+
+        }
+    }
+
+    private fun setLabelDropdown(v: View) {
+        val reference = FirebaseDatabase.getInstance().reference.child("Labels")
+
+        val postListener = object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                if(dataSnapshot.hasChildren()){
+
+                    for (child in dataSnapshot.children) {
+
+                        if(!labelList.contains(child.key.toString()) && child.key.toString()!=null)
+                            labelList.add(child.key.toString())
+
+                    }
+                }
+                setLabelAdapter(v)
+
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+
+                Toast.makeText(context, databaseError.message,Toast.LENGTH_SHORT).show()
+            }
+        }
+        reference.addValueEventListener(postListener)
+
+    }
+
+    private fun setLabelAdapter(v: View) {
+
+        val listAdapter: ArrayAdapter<String> = ArrayAdapter<String>(
+            context!!,
+            android.R.layout.simple_expandable_list_item_1,
+            labelList
+        )
+
+        v.etLabel.setAdapter(listAdapter)
+
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -72,6 +152,9 @@ class LabelFragment : Fragment() {
                               savedInstanceState: Bundle?): View? {
 
         val v = inflater.inflate(R.layout.fragment_label, container, false)
+
+        setDropdown(v)
+        setLabelDropdown(v)
 
         val sdf = SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z", Locale.ENGLISH)
         date = sdf.format(Date())
@@ -81,10 +164,6 @@ class LabelFragment : Fragment() {
             askForPermission()
         })
 
-        v.ibUpload.setOnClickListener{
-
-        }
-
         v.ibSave.setOnClickListener {
 
             name = etName.text.toString()
@@ -92,7 +171,7 @@ class LabelFragment : Fragment() {
 
             if(!TextUtils.isEmpty(name) && photoFile!=null)
             {
-                saveImageInDevice()
+                saveImageInDevice(v)
             }
             else{
                 Toast.makeText(context, "All fields required.", Toast.LENGTH_SHORT).show()
@@ -103,13 +182,34 @@ class LabelFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
-    private fun saveImageInDevice() {
+    private fun saveImageInDevice(v: View) {
 
         name = etName.text.toString()
         label = etLabel.text.toString()
 
         val saveFile = SaveOffline(photoFile, name, label, context!!, "label")
         saveFile.saveInDevice()
+
+        var reference = FirebaseDatabase.getInstance().reference.child("Types")
+
+        if(etLabel.text.isNotEmpty()) {
+            var labelRef = FirebaseDatabase.getInstance().reference.child("Labels")
+            labelRef.child(label.toUpperCase()).setValue(UUID.randomUUID().toString()).addOnSuccessListener {
+                if (!labelList.contains(label.toUpperCase()))
+                    labelList.add(label.toUpperCase())
+
+                setLabelAdapter(v)
+            }.addOnFailureListener {
+                Toast.makeText(context, "Error: " + it.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        reference.child(name.toUpperCase()).setValue(UUID.randomUUID().toString()).addOnSuccessListener {
+            if(!list.contains(name.toUpperCase()))
+                list.add(name.toUpperCase())
+
+            setAdapter(v)
+        }
 
     }
 
