@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
@@ -16,6 +17,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -53,6 +55,7 @@ class PredictFragment : Fragment(),UploadRequestBody.UploadCallback {
 
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -168,8 +171,7 @@ class PredictFragment : Fragment(),UploadRequestBody.UploadCallback {
     }
 
     private fun openCamera() {
-        //reset()
-        Toast.makeText(context, "Cam", Toast.LENGTH_SHORT).show()
+        reset()
         val camIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
 
         photoFile = getFileName(FILENAME)

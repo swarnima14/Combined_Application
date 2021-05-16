@@ -11,7 +11,7 @@ import com.app.combined.R
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.activity_launcher.*
 
-class LauncherActivity : AppCompatActivity(), Toolbar.OnMenuItemClickListener {
+class LauncherActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_launcher)
@@ -40,33 +40,5 @@ class LauncherActivity : AppCompatActivity(), Toolbar.OnMenuItemClickListener {
             }
 
         })
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        super.onCreateOptionsMenu(menu)
-        val inflater = menuInflater
-        inflater.inflate(R.menu.main_menu, menu)
-        return true
-    }
-
-    override fun onMenuItemClick(item: MenuItem?): Boolean {
-        when(item!!.itemId){
-            R.id.menuReset -> Toast.makeText(this, "reset", Toast.LENGTH_SHORT).show()
-            /*R.id.menuUpload -> Toast.makeText(this, "upload", Toast.LENGTH_SHORT).show()
-            R.id.menuSaveOffline -> {
-                if(health != "Invalid" || cropName != "Invalid") {
-                    val saveOffline = SaveOffline(photoFile!!, cropName, health, this)
-                    saveOffline.saveInDevice()
-                }
-                else
-                    Toast.makeText(this, "Could not save", Toast.LENGTH_SHORT).show()
-            }*/
-            R.id.menuPredict -> {
-
-                Toast.makeText(this, "label", Toast.LENGTH_SHORT).show()
-            }
-        }
-        return true
-
     }
 }
