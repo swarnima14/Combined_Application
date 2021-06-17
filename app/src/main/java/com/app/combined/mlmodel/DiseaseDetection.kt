@@ -2,6 +2,7 @@ package com.app.combined.mlmodel
 
 import android.content.Context
 import android.graphics.Bitmap
+import com.app.combined.R
 import com.app.combined.ml.Potatodiseasedetection
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
@@ -13,6 +14,7 @@ class DiseaseDetection(var bitmap: Bitmap, val context: Context, val list: List<
     lateinit var output: ByteBuffer
 
     fun predictName(): String {
+
         val model = Potatodiseasedetection.newInstance(context)
 
         // Creates inputs for reference.
@@ -31,7 +33,7 @@ class DiseaseDetection(var bitmap: Bitmap, val context: Context, val list: List<
         var max = getMax(outputFeature0.floatArray)
 
         if(max == -1)
-            return "Invalid"
+            return context.getString(R.string.invalid)
 
         else
             return list[max]

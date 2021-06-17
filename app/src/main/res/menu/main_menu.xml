@@ -2,15 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <item android:id="@+id/menuPredict"
-        android:title="PREDICT"
-        app:showAsAction="never"/>
-
-
 
     <item android:id="@+id/menuReset"
         android:title="RESET"
-        app:showAsAction="never"/>
+        app:showAsAction="always"
+        android:icon="@drawable/translate"/>
 
 </menu>
 

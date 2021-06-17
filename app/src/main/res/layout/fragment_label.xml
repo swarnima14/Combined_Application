@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".fragments.LabelFragment">
+    tools:context=".fragments.LabelFragment"
+    android:forceDarkAllowed="false">
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline1"
@@ -37,7 +38,7 @@
             android:maxLines="1"
             android:textSize="16sp"
             android:padding="3dp"
-            android:hint="Enter crop name"
+            android:hint="@string/enter_crop_name"
             android:textAllCaps="true"/>
 
     </com.google.android.material.textfield.TextInputLayout>
@@ -63,7 +64,7 @@
             android:maxLines="1"
             android:textSize="16sp"
             android:padding="3dp"
-            android:hint="Enter label"/>
+            android:hint="@string/enter_label"/>
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -88,7 +89,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="@style/Widget.MaterialComponents.Button"
-        android:text="SAVE OFFLINE"
+        android:text="@string/save_offline_btn"
         android:textColor="@color/white"
         android:textStyle="normal"
         android:textSize="18sp"

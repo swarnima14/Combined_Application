@@ -2,6 +2,10 @@ package com.app.combined.fragments
 
 import android.Manifest
 import android.app.Activity
+import android.app.Activity.RESULT_OK
+import android.app.Dialog
+import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -11,22 +15,25 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.ImageButton
+import android.provider.Settings
+import android.view.*
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.fragment.app.Fragment
 import com.app.combined.R
+import com.app.combined.activities.LauncherActivity
 import com.app.combined.apiarea.MyAPI
 import com.app.combined.apiarea.UploadRequestBody
 import com.app.combined.mlmodel.Classify
 import com.app.combined.mlmodel.DiseaseDetection
 import com.app.combined.storage.SaveOffline
+import com.google.android.material.tabs.TabLayout
+import kotlinx.android.synthetic.main.activity_launcher.*
+import kotlinx.android.synthetic.main.dialog_custom.*
+import kotlinx.android.synthetic.main.fragment_label.*
 import kotlinx.android.synthetic.main.fragment_predict.*
 import kotlinx.android.synthetic.main.fragment_predict.view.*
 import okhttp3.MultipartBody
@@ -34,104 +41,154 @@ import pyxis.uzuki.live.mediaresizer.MediaResizer
 import pyxis.uzuki.live.mediaresizer.data.ImageResizeOption
 import pyxis.uzuki.live.mediaresizer.data.ResizeOption
 import pyxis.uzuki.live.mediaresizer.model.ImageMode
+import pyxis.uzuki.live.mediaresizer.model.MediaType
 import pyxis.uzuki.live.mediaresizer.model.ScanRequest
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.io.File
+import java.util.*
 
-class PredictFragment : Fragment(),UploadRequestBody.UploadCallback {
+class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
+
 
     val FILENAME = "pic"
     var photoFile: File? = null
     lateinit var fileProvider: Uri
     var bitmap: Bitmap? = null
-    lateinit var uri: Uri
-    var health ="Invalid"
-    var cropName = "Invalid"
+    var health ="INVALID"
+    var cropName = "INVALID"
+    lateinit var fileName: String
+     var currentLang: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        setHasOptionsMenu(true)
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater, container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
 
+        val prefs = context!!.getSharedPreferences("MY_LANGUAGE", MODE_PRIVATE)
+        currentLang = prefs.getString("myLanguage", "eng").toString()
+
         val v = inflater.inflate(R.layout.fragment_predict, container, false)
 
+        v.imgPredict.setImageResource(R.drawable.no_image)
+        v.tvCropName.text = getString(R.string.crop_name)
+        v.tvHealth.text = getString(R.string.health_status_text)
+        v.tvArea.text = getString(R.string.area)
+
         v.btnCamera.setOnClickListener {
-            checkForPermission()
+            if(isPermissionGranted()){
+                //Toast.makeText(context, "Permission already granted", Toast.LENGTH_SHORT).show()
+                openCamera()
+            }
+
+            else
+                takePermission()
         }
 
         v.preOffline.setOnClickListener {
-            if(health != "Invalid" || cropName != "Invalid") {
+            val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
+            val fi = prefs.getString("myFile", "").toString()
+            photoFile = File(fi)
+
+            if(health != getString(R.string.invalid) || cropName != getString(R.string.invalid)) {
                 val saveOffline = SaveOffline(photoFile!!, cropName, health, context!!, "predict")
                 saveOffline.saveInDevice()
             }
             else
-                Toast.makeText(context, "Could not save", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, getString(R.string.could_not_save_toast), Toast.LENGTH_SHORT).show()
         }
+
+
 
         return v
     }
 
-    private fun getArea() {
+     fun getArea() {
+
+         val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
+         val fi = prefs.getString("myFile", "").toString()
+         photoFile = File(fi)
+         bitmap = BitmapFactory.decodeFile(photoFile!!.path)
+
         if(bitmap != null && photoFile != null){
             sendImage()
         }
         else
-            Toast.makeText(context, "No image selected", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, getString(R.string.no_image_sel_toast), Toast.LENGTH_SHORT).show()
     }
 
-    private fun getHealthStatus() {
-        if(bitmap != null && photoFile!= null){
-            val fileName = "disease.txt"
-            val inpString = context!!.assets.open(fileName).bufferedReader().use { it.readText() }
-            val cropList = inpString.split("\n")
+     fun getHealthStatus() {
 
-            val check = DiseaseDetection(bitmap!!, context!!, cropList)
-            health = check.predictName()
-            tvHealth.text = "Health Description: "
-            tvHealth.append(health)
-        }
-        else
-            Toast.makeText(context, "No image selected", Toast.LENGTH_SHORT).show()
+         val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
+         val fi = prefs.getString("myFile", "").toString()
+         photoFile = File(fi)
+         bitmap = BitmapFactory.decodeFile(photoFile!!.path)
+
+            if (bitmap != null && photoFile != null) {
+                if(currentLang == "hin")
+                    fileName = "diseasedHindi.txt"
+                else
+                    fileName = "disease.txt"
+                    val inpString = context!!.assets.open(fileName).bufferedReader().use { it.readText() }
+                    val cropList = inpString.split("\n")
+
+                val check = DiseaseDetection(bitmap!!, context!!, cropList)
+                health = check.predictName()
+                tvHealth.text = getString(R.string.health_status_text)
+                tvHealth.append(" $health")
+
+            } else
+                Toast.makeText(context, getString(R.string.no_image_sel_toast), Toast.LENGTH_SHORT).show()
+
+
     }
 
-    private fun getCropName() {
+    fun getCropName() {
+
 
         if(bitmap != null && photoFile!= null){
-            val fileName = "cropname.txt"
+
+            if(currentLang == "hin") {
+
+                fileName = "cropnameHindi.txt"
+            }
+            else {
+
+                fileName = "cropname.txt"
+            }
             val inpString = context!!.assets.open(fileName).bufferedReader().use { it.readText() }
             val cropList = inpString.split("\n")
 
             val classify = Classify(bitmap!!, context!!, cropList)
             cropName = classify.predictName()
-            tvCropName.text = "Crop Name: "
-            tvCropName.append(cropName)
+            view!!.tvCropName.text = getString(R.string.crop_name)
+            view!!.tvCropName.append(" $cropName")
         }
         else
-            Toast.makeText(context, "No image selected", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, getString(R.string.no_image_sel_toast), Toast.LENGTH_SHORT).show()
     }
 
-    private fun sendImage() {
+     fun sendImage() {
         progressBar.progress = 0
         progressBar.visibility = View.VISIBLE
         val body = UploadRequestBody(photoFile!!, "multipart/form-data", this)
 
         MyAPI().uploadImage(
                 MultipartBody.Part.createFormData("image", photoFile!!.name, body)
-        ).enqueue(object: Callback<Number> {
+        ).enqueue(object : Callback<Number> {
             override fun onFailure(call: Call<Number>, t: Throwable) {
                 progressBar.progress = 0
                 progressBar.visibility = View.GONE
-                Toast.makeText(context, "Error: "+t.message, Toast.LENGTH_SHORT).show()
-                tvArea.text = "Area: Timeout"
+                Toast.makeText(context, getString(R.string.error_toast) + t.message, Toast.LENGTH_SHORT).show()
+                tvArea.text = "${getString(R.string.area)} ${getString(R.string.area_timeout)}"
             }
 
             override fun onResponse(
@@ -140,20 +197,53 @@ class PredictFragment : Fragment(),UploadRequestBody.UploadCallback {
             ) {
                 progressBar.progress = 100
                 progressBar.visibility = View.GONE
-                Toast.makeText(context, "Uploaded", Toast.LENGTH_SHORT).show()
-                tvArea.text = "Area: ${response.body()}"
+                Toast.makeText(context, getString(R.string.uploaded_toast), Toast.LENGTH_SHORT).show()
+                if (response.body() == 0)
+                    tvArea.text = getString(R.string.area) + " 1"
+                else
+                    tvArea.text = getString(R.string.area) + " ${response.body()}"
             }
 
         })
     }
 
-    private fun checkForPermission() {
 
-        if(ContextCompat.checkSelfPermission(context!!, arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE).toString()) != PackageManager.PERMISSION_GRANTED){
-            requestPermissions(arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE), 100)
+    private fun takePermission() {
+        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.R){
+            try {
+                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                intent.addCategory("android.intent.category.DEFAULT")
+                intent.setData(Uri.parse(String.format("package:%s", context!!.packageName)))
+                startActivityForResult(intent, 1)
+            }catch (e: Exception){
+                val intent = Intent()
+                intent.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                startActivityForResult(intent, 1)
+            }
         }
-        else
-            openCamera()
+        else{
+            requestPermissions(
+                    arrayOf(
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA
+                    ), 2
+            )
+        }
+    }
+
+    private fun isPermissionGranted(): Boolean {
+        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.R)
+            return Environment.isExternalStorageManager()
+        else{
+            val readExternalStoragePermission = ContextCompat.checkSelfPermission(
+                    context!!,
+                    arrayOf(
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    ).toString()
+            )
+            return readExternalStoragePermission == PackageManager.PERMISSION_GRANTED
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -163,29 +253,41 @@ class PredictFragment : Fragment(),UploadRequestBody.UploadCallback {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        if(requestCode == 100 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            openCamera()
+        if(grantResults.size > 0 && requestCode ==2){
+            val readExtStorage = grantResults[0] == PackageManager.PERMISSION_GRANTED
+            if(readExtStorage){
+                //Toast.makeText(context, "Perm granted", Toast.LENGTH_SHORT).show()
+                openCamera()
+            }
+            else{
+                takePermission()
+            }
         }
-        else
-            Toast.makeText(context, "Camera permission required", Toast.LENGTH_SHORT).show()
     }
 
-    private fun openCamera() {
+     fun openCamera() {
         reset()
         val camIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
 
         photoFile = getFileName(FILENAME)
+
+        val editor = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE).edit()
+        editor.putString("myFile", photoFile.toString())
+        editor.apply()
+        editor.commit()
+
         fileProvider = FileProvider.getUriForFile(context!!, "com.app.combined.fileprovider", photoFile!!)
         camIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileProvider)
-        startActivityForResult(camIntent, 1)
+
+        startActivityForResult(camIntent, 98)
     }
 
     private fun reset() {
         photoFile = null
-        imageView.setImageBitmap(null)
-        tvCropName.text = "Crop Name: "
-        tvHealth.text = "Health description: "
-        tvArea.text = "Area: "
+        imgPredict.setImageBitmap(null)
+        tvCropName.text = getString(R.string.crop_name)
+        tvHealth.text = getString(R.string.health_status_text)
+        tvArea.text = getString(R.string.area)
     }
 
     private fun getFileName(filename: String): File {
@@ -194,12 +296,28 @@ class PredictFragment : Fragment(),UploadRequestBody.UploadCallback {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
+        //super.onActivityResult(requestCode, resultCode, data)
+        if(resultCode == Activity.RESULT_OK){
+            if(requestCode == 1){
+                if(Build.VERSION.SDK_INT == Build.VERSION_CODES.R){
+                    if(Environment.isExternalStorageManager()){
+                       // Toast.makeText(context, "perm granted", Toast.LENGTH_SHORT).show()
+                        openCamera()
+                    }
+                }
+            }
+        }
 
-        if(requestCode == 1 && resultCode == Activity.RESULT_OK){
+        if(requestCode == 98 && resultCode == RESULT_OK) {
+
+            setLayout(context!!.getSharedPreferences("MY_LANGUAGE", AppCompatActivity.MODE_PRIVATE).getString("myLanguage", "eng").toString())
+
+
+            val editor = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
+            photoFile = File(editor.getString("myFile", "").toString())
 
             bitmap = BitmapFactory.decodeFile(photoFile!!.path)
-            imageView.setImageBitmap(bitmap)
+            imgPredict.setImageBitmap(bitmap)
 
             val resizeOption = ImageResizeOption.Builder()
                     .setImageProcessMode(ImageMode.ResizeAndCompress)
@@ -210,8 +328,9 @@ class PredictFragment : Fragment(),UploadRequestBody.UploadCallback {
                     .setScanRequest(ScanRequest.TRUE)
                     .build()
 
+
             val option = ResizeOption.Builder()
-                    .setMediaType(pyxis.uzuki.live.mediaresizer.model.MediaType.IMAGE)
+                    .setMediaType(MediaType.IMAGE)
                     .setImageResizeOption(resizeOption)
                     .setTargetPath(photoFile!!.absolutePath)
                     .setOutputPath(photoFile!!.absolutePath)
@@ -219,17 +338,96 @@ class PredictFragment : Fragment(),UploadRequestBody.UploadCallback {
 
             MediaResizer.process(option)
 
-            uri = Uri.fromFile(photoFile)
-
             getCropName()
             getHealthStatus()
             getArea()
-
         }
     }
 
     override fun onProgressUpdate(percentage: Int) {
         progressBar.progress = percentage
     }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+
+        inflater.inflate(R.menu.main_menu, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+        if(item.itemId == R.id.menuReset){
+           // Toast.makeText(context, "reset clicked", Toast.LENGTH_SHORT).show()
+            /*val intent = Intent(activity, LangSelActivity::class.java)
+            startActivity(intent)*/
+
+            val customDialog = Dialog(context!!)
+
+            customDialog.setContentView(R.layout.dialog_custom)
+            customDialog.customBtnHin.setOnClickListener {
+                changeLang("hi", context!!)
+                saveLanguage("hin")
+                customDialog.dismiss()
+                onStart()
+                val i = Intent(activity, LauncherActivity::class.java)
+                activity!!.overridePendingTransition(0, 0)
+                startActivity(i)
+                activity!!.overridePendingTransition(0, 0)
+                activity!!.finish()
+            }
+
+            customDialog.customBtnEng.setOnClickListener {
+                changeLang("en", context!!)
+                saveLanguage("eng")
+                customDialog.dismiss()
+                onStart()
+                val i = Intent(activity, LauncherActivity::class.java)
+                activity!!.overridePendingTransition(0, 0)
+                startActivity(i)
+                activity!!.overridePendingTransition(0, 0)
+                activity!!.finish()
+            }
+
+            customDialog.show()
+
+        }
+        return true
+    }
+
+    fun changeLang(str: String, context: Context){
+
+        val locale = Locale(str)
+        Locale.setDefault(locale)
+        val configuration = context.resources.configuration
+        configuration.locale = locale
+        context.createConfigurationContext(configuration)
+        context.resources.updateConfiguration(configuration, context.resources.displayMetrics)
+
+    }
+
+    fun saveLanguage(type: String?) {
+        val editor = context!!.getSharedPreferences("MY_LANGUAGE", AppCompatActivity.MODE_PRIVATE).edit()
+        editor.putString("myLanguage", type)
+        editor.apply()
+        editor.commit()
+    }
+
+    fun setLayout(str: String){
+        if(str == "eng"){
+            changeLang("en", context!!)
+
+        }
+        else{
+            changeLang("hi", context!!)
+        }
+
+        tvArea.text = getString(R.string.area)
+        tvCropName.text = getString(R.string.crop_name)
+        tvHealth.text = getString(R.string.health_status_text)
+        preOffline.text = getString(R.string.save_offline_btn)
+
+    }
+
+
 
 }

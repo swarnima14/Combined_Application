@@ -2,6 +2,7 @@ package com.app.combined.mlmodel
 
 import android.content.Context
 import android.graphics.Bitmap
+import com.app.combined.R
 import com.app.combined.ml.Model
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
@@ -14,6 +15,7 @@ class Classify(var bitmap: Bitmap, val context: Context, val cropList: List<Stri
     lateinit var output: ByteBuffer
 
     fun predictName(): String {
+
         val model = Model.newInstance(context)
 
         // Creates inputs for reference.
@@ -35,7 +37,7 @@ class Classify(var bitmap: Bitmap, val context: Context, val cropList: List<Stri
         model.close()
 
         if(max == -1)
-            return "Invalid"
+            return context.getString(R.string.invalid)
 
         else
             return cropList[max]

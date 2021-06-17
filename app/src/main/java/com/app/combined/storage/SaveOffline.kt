@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import com.app.combined.R
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -29,19 +30,19 @@ class SaveOffline(
     fun saveInDevice() {
 
         if(s != "label") {
-            if (cropName == "Invalid") {
+            if (cropName == context.getString(R.string.invalid)) {
                 finalName = health.toUpperCase()
-            } else if (health == "Invalid") {
+            } else if (health == context.getString(R.string.invalid)) {
                 finalName = cropName.toUpperCase()
             } else {
                 finalName = cropName.toUpperCase() + health.toUpperCase()
             }
         }
         else{
-            if (cropName == "Invalid" || cropName == null) {
-                finalName = "MANUAL"
+            if (cropName == context.getString(R.string.invalid) || cropName == null) {
+                finalName = context.getString(R.string.manual)
             } else {
-                finalName = cropName.toUpperCase() + "MANUAL"
+                finalName = cropName.toUpperCase() + context.getString(R.string.manual)
             }
         }
 
@@ -61,9 +62,9 @@ class SaveOffline(
             }
             fileOutputStream.close()
             file.delete()
-            Toast.makeText(context, "Saved in your device.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.saved_device_toast), Toast.LENGTH_SHORT).show()
         }catch (e: IOException){
-            Toast.makeText(context, "Could not be saved: "+e.message, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.could_not_save_toast)+" ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -93,7 +94,7 @@ class SaveOffline(
             exifInterface.saveAttributes()
 
         } catch (e: IOException) {
-            Toast.makeText(context, "Error: "+e.message, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.error_toast)+" ${e.message}", Toast.LENGTH_SHORT).show()
             // Handle any errors
         } finally {
             if (inpS != null) {

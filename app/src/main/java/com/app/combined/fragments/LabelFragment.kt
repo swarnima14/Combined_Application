@@ -1,7 +1,11 @@
 package com.app.combined.fragments
 
 import android.Manifest
+import android.R.attr
 import android.app.Activity
+import android.app.Activity.*
+import android.app.Dialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -11,24 +15,31 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.provider.Settings
 import android.text.TextUtils
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.ArrayAdapter
+import android.widget.TableLayout
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.fragment.app.Fragment
+import com.app.combined.PagerAdapter
 import com.app.combined.R
+import com.app.combined.activities.LauncherActivity
 import com.app.combined.storage.SaveOffline
+import com.google.android.material.tabs.TabLayout
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlinx.android.synthetic.main.activity_launcher.*
+import kotlinx.android.synthetic.main.dialog_custom.*
 import kotlinx.android.synthetic.main.fragment_label.*
 import kotlinx.android.synthetic.main.fragment_label.view.*
+import kotlinx.android.synthetic.main.fragment_predict.*
 import pyxis.uzuki.live.mediaresizer.MediaResizer
 import pyxis.uzuki.live.mediaresizer.data.ImageResizeOption
 import pyxis.uzuki.live.mediaresizer.data.ResizeOption
@@ -40,29 +51,28 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
-class LabelFragment : Fragment() {
+
+class LabelFragment() : Fragment() {
 
     lateinit var bitmap: Bitmap
     lateinit var date: String
     lateinit var photoFile: File
+    var f: String? = null
     lateinit var fileProvider: Uri
 
     var uri: Uri? = null
     lateinit var label: String
     val FILE_NAME = "pic"
     lateinit var name: String
-    var count =0
+    lateinit var currentLang: String
 
     var list: MutableList<String> = ArrayList()
     var labelList: MutableList<String> = ArrayList()
 
-    internal var myExternalFile: File?=null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
-
+        setHasOptionsMenu(true)
     }
 
     private fun setDropdown(v: View)
@@ -87,7 +97,7 @@ class LabelFragment : Fragment() {
 
             override fun onCancelled(databaseError: DatabaseError) {
 
-                Toast.makeText(context, databaseError.message,Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, databaseError.message, Toast.LENGTH_SHORT).show()
             }
         }
         reference.addValueEventListener(postListener)
@@ -97,9 +107,9 @@ class LabelFragment : Fragment() {
     fun setAdapter(v: View)
     {
         val adapter: ArrayAdapter<String> = ArrayAdapter<String>(
-            context!!,
-            android.R.layout.simple_expandable_list_item_1,
-            list
+                context!!,
+                android.R.layout.simple_expandable_list_item_1,
+                list
         )
 
         v.etName.setAdapter(adapter)
@@ -128,7 +138,7 @@ class LabelFragment : Fragment() {
 
             override fun onCancelled(databaseError: DatabaseError) {
 
-                Toast.makeText(context, databaseError.message,Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, databaseError.message, Toast.LENGTH_SHORT).show()
             }
         }
         reference.addValueEventListener(postListener)
@@ -138,9 +148,9 @@ class LabelFragment : Fragment() {
     private fun setLabelAdapter(v: View) {
 
         val listAdapter: ArrayAdapter<String> = ArrayAdapter<String>(
-            context!!,
-            android.R.layout.simple_expandable_list_item_1,
-            labelList
+                context!!,
+                android.R.layout.simple_expandable_list_item_1,
+                labelList
         )
 
         v.etLabel.setAdapter(listAdapter)
@@ -148,10 +158,20 @@ class LabelFragment : Fragment() {
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+            inflater: LayoutInflater, container: ViewGroup?,
+            savedInstanceState: Bundle?
+    ): View? {
+
+
+
+        val prefs = context!!.getSharedPreferences("MY_LANGUAGE", Context.MODE_PRIVATE)
+        currentLang = prefs.getString("myLanguage", "eng").toString()
 
         val v = inflater.inflate(R.layout.fragment_label, container, false)
+        v.etLabel.hint = getString(R.string.enter_label)
+        v.etName.hint = getString(R.string.enter_crop_name)
+        v.ibSave.text = getString(R.string.save_offline_btn)
 
         setDropdown(v)
         setLabelDropdown(v)
@@ -161,20 +181,26 @@ class LabelFragment : Fragment() {
         
         v.btnCapture.setOnClickListener(View.OnClickListener {
 
-            askForPermission()
+            if (isPermissionGranted()) {
+                //Toast.makeText(context, "Permission already granted", Toast.LENGTH_SHORT).show()
+                openCamera()
+            } else
+                takePermission()
         })
 
         v.ibSave.setOnClickListener {
 
             name = etName.text.toString()
             label = etLabel.text.toString()
-
+            val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
+            val fi = prefs.getString("myFile", "").toString()
+            photoFile = File(fi)
             if(!TextUtils.isEmpty(name) && photoFile!=null)
             {
                 saveImageInDevice(v)
             }
             else{
-                Toast.makeText(context, "All fields required.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, getString(R.string.all_fields_toast), Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -187,23 +213,36 @@ class LabelFragment : Fragment() {
         name = etName.text.toString()
         label = etLabel.text.toString()
 
-        val saveFile = SaveOffline(photoFile, name, label, context!!, "label")
-        saveFile.saveInDevice()
+        val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
+        val fi = prefs.getString("myFile", "").toString()
+        photoFile = File(fi)
 
-        var reference = FirebaseDatabase.getInstance().reference.child("Types")
+
+        val saveFile = SaveOffline(File(fi), name, label, context!!, "label")
+        saveFile.saveInDevice()
 
         if(etLabel.text.isNotEmpty()) {
             var labelRef = FirebaseDatabase.getInstance().reference.child("Labels")
             labelRef.child(label.toUpperCase()).setValue(UUID.randomUUID().toString()).addOnSuccessListener {
-                if (!labelList.contains(label.toUpperCase()))
-                    labelList.add(label.toUpperCase())
 
-                setLabelAdapter(v)
+
+
+
+                    if (!labelList.contains(label.toUpperCase()))
+                        labelList.add(label.toUpperCase())
+
+                    setLabelAdapter(v)
+
             }.addOnFailureListener {
-                Toast.makeText(context, "Error: " + it.message, Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                        context,
+                        getString(R.string.error_toast) + it.message,
+                        Toast.LENGTH_SHORT
+                ).show()
             }
         }
 
+        var reference = FirebaseDatabase.getInstance().reference.child("Types")
         reference.child(name.toUpperCase()).setValue(UUID.randomUUID().toString()).addOnSuccessListener {
             if(!list.contains(name.toUpperCase()))
                 list.add(name.toUpperCase())
@@ -211,31 +250,65 @@ class LabelFragment : Fragment() {
             setAdapter(v)
         }
 
+
+
     }
 
-    fun askForPermission()
-    {
-        if((ContextCompat.checkSelfPermission(context!!, arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE).toString())) !=
-            PackageManager.PERMISSION_GRANTED)
-        {
-            requestPermissions(arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE), 11)
+    private fun takePermission() {
+        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.R){
+            try {
+                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                intent.addCategory("android.intent.category.DEFAULT")
+                intent.setData(Uri.parse(String.format("package:%s", context!!.packageName)))
+                startActivityForResult(intent, 1)
+            }catch (e: Exception){
+                val intent = Intent()
+                intent.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                startActivityForResult(intent, 1)
+            }
         }
-        else
-        {
-            openCamera()
+        else{
+            requestPermissions(
+                    arrayOf(
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA
+                    ), 2
+            )
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    private fun isPermissionGranted(): Boolean {
+        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.R)
+            return Environment.isExternalStorageManager()
+        else{
+            val readExternalStoragePermission = ContextCompat.checkSelfPermission(
+                    context!!,
+                    arrayOf(
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    ).toString()
+            )
+            return readExternalStoragePermission == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+
+    override fun onRequestPermissionsResult(
+            requestCode: Int,
+            permissions: Array<out String>,
+            grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        if(requestCode == 11 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-        {
-            openCamera()
-        }
-        else
-        {
-            Toast.makeText(context, "Camera and storage permissions are necessary.", Toast.LENGTH_SHORT).show()
+        if(grantResults.size > 0 && requestCode ==2){
+            val readExtStorage = grantResults[0] == PackageManager.PERMISSION_GRANTED
+            if(readExtStorage){
+                //Toast.makeText(context, "Perm granted", Toast.LENGTH_SHORT).show()
+                openCamera()
+            }
+            else{
+                takePermission()
+            }
         }
 
     }
@@ -243,62 +316,148 @@ class LabelFragment : Fragment() {
     fun openCamera()
     {
         var camIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        name=etName.text.toString()
-
         photoFile = getPhotoFile(FILE_NAME)
 
-        fileProvider = FileProvider.getUriForFile(context!!,"com.app.combined.fileprovider", photoFile)
+        val editor = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE).edit()
+        editor.putString("myFile", photoFile.toString())
+        editor.apply()
+        editor.commit()
+
+        fileProvider = FileProvider.getUriForFile(context!!, "com.app.combined.fileprovider", photoFile!!)
+
         camIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileProvider)
 
-        startActivityForResult(camIntent, 99)
+        val frag = LabelFragment()
+
+       startActivityForResult(camIntent, 99)
     }
 
     private fun getPhotoFile(fileName: String): File {
-        name = etName.text.toString()
+
         val storageDirectory = context!!.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-
-        return File.createTempFile(fileName,".jpg", storageDirectory)
+        return File.createTempFile(fileName, ".jpg", storageDirectory)
     }
-
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
+        //super.onActivityResult(requestCode, resultCode, data)
 
-        if(requestCode == 100 && resultCode == Activity.RESULT_OK)
-        {
-            ivImg.setImageURI(data?.data)
-            uri = data?.data
-            bitmap = MediaStore.Images.Media.getBitmap(context!!.contentResolver, uri)
 
+        if(resultCode == Activity.RESULT_OK){
+            if(requestCode == 1){
+                if(Build.VERSION.SDK_INT == Build.VERSION_CODES.R){
+                    if(Environment.isExternalStorageManager()){
+                        //Toast.makeText(context, "perm granted", Toast.LENGTH_SHORT).show()
+                        openCamera()
+                    }
+                }
+            }
         }
-        else if(requestCode == 99 && resultCode == Activity.RESULT_OK)
-        {
-            bitmap = BitmapFactory.decodeFile(photoFile.path)
 
+        if(requestCode == 99 && resultCode == RESULT_OK)
+        {
+            setLayout(context!!.getSharedPreferences("MY_LANGUAGE", AppCompatActivity.MODE_PRIVATE).getString("myLanguage", "eng").toString())
+
+            val editor = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
+            photoFile = File(editor.getString("myFile", "").toString())
+
+            bitmap = BitmapFactory.decodeFile(photoFile!!.path)
             ivImg.setImageBitmap(bitmap)
 
             val resizeOption = ImageResizeOption.Builder()
-                .setImageProcessMode(ImageMode.ResizeAndCompress)
-                .setImageResolution(1280, 720)
-                .setBitmapFilter(false)
-                .setCompressFormat(Bitmap.CompressFormat.JPEG)
-                .setCompressQuality(75)
-                .setScanRequest(ScanRequest.TRUE)
-                .build()
+                    .setImageProcessMode(ImageMode.ResizeAndCompress)
+                    .setImageResolution(1280, 720)
+                    .setBitmapFilter(false)
+                    .setCompressFormat(Bitmap.CompressFormat.JPEG)
+                    .setCompressQuality(75)
+                    .setScanRequest(ScanRequest.TRUE)
+                    .build()
 
             val option = ResizeOption.Builder()
-                .setMediaType(MediaType.IMAGE)
-                .setImageResizeOption(resizeOption)
-                .setTargetPath(photoFile.absolutePath)
-                .setOutputPath(photoFile.absolutePath)
-                .build()
+                    .setMediaType(MediaType.IMAGE)
+                    .setImageResizeOption(resizeOption)
+                    .setTargetPath(photoFile!!.absolutePath)
+                    .setOutputPath(photoFile!!.absolutePath)
+                    .build()
 
             MediaResizer.process(option)
-
-            uri = Uri.fromFile(photoFile)
+            //uri = Uri.fromFile(fi)
 
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.main_menu, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+        if(item.itemId == R.id.menuReset){
+            //Toast.makeText(context, "reset clicked", Toast.LENGTH_SHORT).show()
+
+            val customDialog = Dialog(context!!)
+
+            customDialog.setContentView(R.layout.dialog_custom)
+            customDialog.customBtnHin.setOnClickListener {
+                changeLang("hi", context!!)
+                saveLanguage("hin")
+                customDialog.dismiss()
+                onStart()
+                val i = Intent(activity, LauncherActivity::class.java)
+                activity!!.overridePendingTransition(0, 0)
+                startActivity(i)
+                activity!!.overridePendingTransition(0, 0)
+                activity!!.finish()
+            }
+
+            customDialog.customBtnEng.setOnClickListener {
+                changeLang("en", context!!)
+                saveLanguage("eng")
+                customDialog.dismiss()
+                onStart()
+                val i = Intent(activity, LauncherActivity::class.java)
+                activity!!.overridePendingTransition(0, 0)
+                startActivity(i)
+                activity!!.overridePendingTransition(0, 0)
+                activity!!.finish()
+            }
+
+            customDialog.show()
+
+        }
+        return true
+    }
+
+    fun changeLang(str: String, context: Context){
+        val locale = Locale(str)
+        Locale.setDefault(locale)
+        val configuration = context.resources.configuration
+        configuration.locale = locale
+        context.createConfigurationContext(configuration)
+        context.resources.updateConfiguration(configuration, context.resources.displayMetrics)
+
+    }
+
+    fun saveLanguage(type: String?) {
+        val editor = context!!.getSharedPreferences("MY_LANGUAGE", AppCompatActivity.MODE_PRIVATE).edit()
+        editor.putString("myLanguage", type)
+        editor.apply()
+        editor.commit()
+    }
+
+    fun setLayout(str: String){
+        if(str == "eng"){
+            changeLang("en", context!!)
+
+        }
+        else{
+            changeLang("hi", context!!)
+        }
+        etLabel.hint = getString(R.string.enter_label)
+        etName.hint = getString(R.string.enter_crop_name)
+        ibSave.text = getString(R.string.save_offline_btn)
+
 
     }
 
