@@ -55,8 +55,9 @@ class SaveOffline(
 
         val fileOutputStream = FileOutputStream(myExternalFile)
         try{
-            var bitmap = BitmapFactory.decodeFile(file.absolutePath)
+            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream)
+
             if(s=="label"){
                 extractTag(file, health)
             }

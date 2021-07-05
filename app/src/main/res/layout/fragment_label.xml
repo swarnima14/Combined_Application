@@ -133,11 +133,21 @@
             android:id="@+id/btnCapture"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
             android:background="@drawable/ripple_background"
             android:contentDescription="open camera"
             android:padding="8dp"
             android:src="@drawable/camera" />
+
+        <ImageButton
+            android:id="@+id/btnGallery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:background="@drawable/ripple_background"
+            android:contentDescription="open gallery"
+            android:padding="8dp"
+            android:src="@drawable/gallery" />
 
     </LinearLayout>
 

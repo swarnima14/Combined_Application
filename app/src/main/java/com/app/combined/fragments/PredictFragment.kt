@@ -23,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import com.app.combined.FileUtil
 import com.app.combined.R
 import com.app.combined.activities.LauncherActivity
 import com.app.combined.apiarea.MyAPI
@@ -60,6 +61,10 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
     var cropName = "INVALID"
     lateinit var fileName: String
      var currentLang: String? = null
+     var uri: Uri? = null
+
+    var pressGal = false
+    var pressCam = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,6 +89,7 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
         v.tvArea.text = getString(R.string.area)
 
         v.btnCamera.setOnClickListener {
+
             if(isPermissionGranted()){
                 //Toast.makeText(context, "Permission already granted", Toast.LENGTH_SHORT).show()
                 openCamera()
@@ -93,17 +99,45 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
                 takePermission()
         }
 
-        v.preOffline.setOnClickListener {
-            val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
-            val fi = prefs.getString("myFile", "").toString()
-            photoFile = File(fi)
+        v.btnPreGallery.setOnClickListener {
 
-            if(health != getString(R.string.invalid) || cropName != getString(R.string.invalid)) {
-                val saveOffline = SaveOffline(photoFile!!, cropName, health, context!!, "predict")
-                saveOffline.saveInDevice()
+            pressGal = false
+            reset()
+
+            var intent: Intent = Intent(Intent.ACTION_GET_CONTENT)
+            intent.type = "image/*"
+
+            this.startActivityForResult(intent, 97)
+        }
+
+        v.preOffline.setOnClickListener {
+
+            if(pressGal) {
+                val s = FileUtil.getPath(uri!!, context!!)
+                photoFile = File(s)
+
+                if(health != getString(R.string.invalid) || cropName != getString(R.string.invalid)) {
+
+                    val saveOffline = SaveOffline(photoFile!!, cropName, health, context!!, "predict")
+                    saveOffline.saveInDevice()
+                }
+                else
+                    Toast.makeText(context, getString(R.string.could_not_save_toast), Toast.LENGTH_SHORT).show()
             }
-            else
-                Toast.makeText(context, getString(R.string.could_not_save_toast), Toast.LENGTH_SHORT).show()
+            else {
+                val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
+                val fi = prefs.getString("myFile", "").toString()
+                photoFile = File(fi)
+
+                if(health != getString(R.string.invalid) || cropName != getString(R.string.invalid)) {
+                    val saveOffline = SaveOffline(photoFile!!, cropName, health, context!!, "predict")
+                    saveOffline.saveInDevice()
+                }
+                else
+                    Toast.makeText(context, getString(R.string.could_not_save_toast), Toast.LENGTH_SHORT).show()
+            }
+
+
         }
 
 
@@ -113,10 +147,18 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
 
      fun getArea() {
 
-         val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
-         val fi = prefs.getString("myFile", "").toString()
-         photoFile = File(fi)
-         bitmap = BitmapFactory.decodeFile(photoFile!!.path)
+         if(pressGal) {
+             //photoFile = File(uri.toString())
+             val s = FileUtil.getPath(uri!!, context!!)
+             photoFile = File(s)
+         }
+         else {
+
+             val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
+             val fi = prefs.getString("myFile", "").toString()
+             photoFile = File(fi)
+         }
+        // bitmap = BitmapFactory.decodeFile(photoFile!!.path)
 
         if(bitmap != null && photoFile != null){
             sendImage()
@@ -127,10 +169,15 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
 
      fun getHealthStatus() {
 
-         val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
-         val fi = prefs.getString("myFile", "").toString()
-         photoFile = File(fi)
-         bitmap = BitmapFactory.decodeFile(photoFile!!.path)
+         if(pressGal)
+             photoFile = File(uri.toString())
+         else {
+
+             val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
+             val fi = prefs.getString("myFile", "").toString()
+             photoFile = File(fi)
+         }
+        // bitmap = BitmapFactory.decodeFile(photoFile!!.path)
 
             if (bitmap != null && photoFile != null) {
                 if(currentLang == "hin")
@@ -153,6 +200,13 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
 
     fun getCropName() {
 
+        if(pressGal)
+            photoFile = File(uri.toString())
+        else{
+            val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
+            val fi = prefs.getString("myFile", "").toString()
+            photoFile = File(fi)
+        }
 
         if(bitmap != null && photoFile!= null){
 
@@ -188,7 +242,7 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
                 progressBar.progress = 0
                 progressBar.visibility = View.GONE
                 Toast.makeText(context, getString(R.string.error_toast) + t.message, Toast.LENGTH_SHORT).show()
-                tvArea.text = "${getString(R.string.area)} ${getString(R.string.area_timeout)}"
+                tvArea.text = "${getString(R.string.area_timeout)}"
             }
 
             override fun onResponse(
@@ -197,7 +251,7 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
             ) {
                 progressBar.progress = 100
                 progressBar.visibility = View.GONE
-                Toast.makeText(context, getString(R.string.uploaded_toast), Toast.LENGTH_SHORT).show()
+               // Toast.makeText(context, getString(R.string.uploaded_toast), Toast.LENGTH_SHORT).show()
                 if (response.body() == 0)
                     tvArea.text = getString(R.string.area) + " 1"
                 else
@@ -266,6 +320,9 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
     }
 
      fun openCamera() {
+
+         pressCam = false
+
         reset()
         val camIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
 
@@ -310,6 +367,8 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
 
         if(requestCode == 98 && resultCode == RESULT_OK) {
 
+            pressCam = true
+
             setLayout(context!!.getSharedPreferences("MY_LANGUAGE", AppCompatActivity.MODE_PRIVATE).getString("myLanguage", "eng").toString())
 
 
@@ -341,6 +400,22 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
             getCropName()
             getHealthStatus()
             getArea()
+        }
+
+        if(resultCode == RESULT_OK && requestCode == 97 && data != null) {
+
+            pressGal = true
+
+            imgPredict.setImageURI(data.data)
+            uri = data.data
+            bitmap = MediaStore.Images.Media.getBitmap(context!!.contentResolver, uri)
+
+            photoFile = File(uri.toString())
+
+            getCropName()
+            getHealthStatus()
+            getArea()
+
         }
     }
 

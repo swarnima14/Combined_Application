@@ -26,6 +26,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import com.app.combined.FileUtil
 import com.app.combined.PagerAdapter
 import com.app.combined.R
 import com.app.combined.activities.LauncherActivity
@@ -65,6 +66,9 @@ class LabelFragment() : Fragment() {
     val FILE_NAME = "pic"
     lateinit var name: String
     lateinit var currentLang: String
+
+    var pressGal = false
+    var pressCam = false
 
     var list: MutableList<String> = ArrayList()
     var labelList: MutableList<String> = ArrayList()
@@ -188,6 +192,16 @@ class LabelFragment() : Fragment() {
                 takePermission()
         })
 
+        v.btnGallery.setOnClickListener {
+            pressGal = false
+            reset()
+
+            var intent: Intent = Intent(Intent.ACTION_GET_CONTENT)
+            intent.type = "image/*"
+
+            this.startActivityForResult(intent, 96)
+        }
+
         v.ibSave.setOnClickListener {
 
             name = etName.text.toString()
@@ -213,12 +227,20 @@ class LabelFragment() : Fragment() {
         name = etName.text.toString()
         label = etLabel.text.toString()
 
+        if(pressGal){
+            val s = FileUtil.getPath(uri!!, context!!)
+            photoFile = File(s)
+        }
+
+        if(pressCam){
+
         val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
         val fi = prefs.getString("myFile", "").toString()
         photoFile = File(fi)
+        }
 
 
-        val saveFile = SaveOffline(File(fi), name, label, context!!, "label")
+        val saveFile = SaveOffline(photoFile, name, label, context!!, "label")
         saveFile.saveInDevice()
 
         if(etLabel.text.isNotEmpty()) {
@@ -313,8 +335,17 @@ class LabelFragment() : Fragment() {
 
     }
 
+    private fun reset() {
+
+        ivImg.setImageBitmap(null)
+        etName.text = null
+        etLabel.text = null
+    }
+
     fun openCamera()
     {
+        pressCam = false
+        reset()
         var camIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         photoFile = getPhotoFile(FILE_NAME)
 
@@ -356,6 +387,8 @@ class LabelFragment() : Fragment() {
 
         if(requestCode == 99 && resultCode == RESULT_OK)
         {
+            pressCam = true
+
             setLayout(context!!.getSharedPreferences("MY_LANGUAGE", AppCompatActivity.MODE_PRIVATE).getString("myLanguage", "eng").toString())
 
             val editor = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
@@ -382,6 +415,19 @@ class LabelFragment() : Fragment() {
 
             MediaResizer.process(option)
             //uri = Uri.fromFile(fi)
+
+        }
+
+        if(resultCode == RESULT_OK && requestCode == 96 && data != null) {
+
+            pressGal = true
+
+            ivImg.setImageURI(data.data)
+            uri = data.data
+           // bitmap = MediaStore.Images.Media.getBitmap(context!!.contentResolver, uri)
+
+            photoFile = File(uri.toString())
+
 
         }
     }
