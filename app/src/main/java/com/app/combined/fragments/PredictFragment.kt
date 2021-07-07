@@ -21,6 +21,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import com.app.combined.FileUtil
@@ -51,8 +52,6 @@ import java.io.File
 import java.util.*
 
 class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
-
-
     val FILENAME = "pic"
     var photoFile: File? = null
     lateinit var fileProvider: Uri
@@ -60,11 +59,14 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
     var health ="INVALID"
     var cropName = "INVALID"
     lateinit var fileName: String
-     var currentLang: String? = null
-     var uri: Uri? = null
+    var currentLang: String? = null
+    var uri: Uri? = null
 
     var pressGal = false
     var pressCam = false
+
+    var btnCam = false
+    var btnGal = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,24 +92,32 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
 
         v.btnCamera.setOnClickListener {
 
+            btnCam = true
+            btnGal = false
+
             if(isPermissionGranted()){
                 //Toast.makeText(context, "Permission already granted", Toast.LENGTH_SHORT).show()
                 openCamera()
-            }
-
-            else
+            } else
                 takePermission()
         }
 
         v.btnPreGallery.setOnClickListener {
 
+            btnGal = true
+            btnCam = false
             pressGal = false
-            reset()
 
-            var intent: Intent = Intent(Intent.ACTION_GET_CONTENT)
-            intent.type = "image/*"
+            if(isPermissionGranted())
+                openGallery()
 
-            this.startActivityForResult(intent, 97)
+            else
+            {
+                takePermission()
+            }
+
+
+
         }
 
         v.preOffline.setOnClickListener {
@@ -145,19 +155,27 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
         return v
     }
 
-     fun getArea() {
+    fun openGallery(){
+        reset()
+        var intent: Intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "image/*"
 
-         if(pressGal) {
-             //photoFile = File(uri.toString())
-             val s = FileUtil.getPath(uri!!, context!!)
-             photoFile = File(s)
-         }
-         else {
+        this.startActivityForResult(intent, 97)
+    }
 
-             val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
-             val fi = prefs.getString("myFile", "").toString()
-             photoFile = File(fi)
-         }
+    fun getArea() {
+
+        if(pressGal) {
+            //photoFile = File(uri.toString())
+            val s = FileUtil.getPath(uri!!, context!!)
+            photoFile = File(s)
+        }
+        else {
+
+            val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
+            val fi = prefs.getString("myFile", "").toString()
+            photoFile = File(fi)
+        }
         // bitmap = BitmapFactory.decodeFile(photoFile!!.path)
 
         if(bitmap != null && photoFile != null){
@@ -167,33 +185,33 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
             Toast.makeText(context, getString(R.string.no_image_sel_toast), Toast.LENGTH_SHORT).show()
     }
 
-     fun getHealthStatus() {
+    fun getHealthStatus() {
 
-         if(pressGal)
-             photoFile = File(uri.toString())
-         else {
+        if(pressGal)
+            photoFile = File(uri.toString())
+        else {
 
-             val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
-             val fi = prefs.getString("myFile", "").toString()
-             photoFile = File(fi)
-         }
+            val prefs = context!!.getSharedPreferences("MY_FILE", AppCompatActivity.MODE_PRIVATE)
+            val fi = prefs.getString("myFile", "").toString()
+            photoFile = File(fi)
+        }
         // bitmap = BitmapFactory.decodeFile(photoFile!!.path)
 
-            if (bitmap != null && photoFile != null) {
-                if(currentLang == "hin")
-                    fileName = "diseasedHindi.txt"
-                else
-                    fileName = "disease.txt"
-                    val inpString = context!!.assets.open(fileName).bufferedReader().use { it.readText() }
-                    val cropList = inpString.split("\n")
+        if (bitmap != null && photoFile != null) {
+            if(currentLang == "hin")
+                fileName = "diseasedHindi.txt"
+            else
+                fileName = "disease.txt"
+            val inpString = context!!.assets.open(fileName).bufferedReader().use { it.readText() }
+            val cropList = inpString.split("\n")
 
-                val check = DiseaseDetection(bitmap!!, context!!, cropList)
-                health = check.predictName()
-                tvHealth.text = getString(R.string.health_status_text)
-                tvHealth.append(" $health")
+            val check = DiseaseDetection(bitmap!!, context!!, cropList)
+            health = check.predictName()
+            tvHealth.text = getString(R.string.health_status_text)
+            tvHealth.append(" $health")
 
-            } else
-                Toast.makeText(context, getString(R.string.no_image_sel_toast), Toast.LENGTH_SHORT).show()
+        } else
+            Toast.makeText(context, getString(R.string.no_image_sel_toast), Toast.LENGTH_SHORT).show()
 
 
     }
@@ -230,7 +248,7 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
             Toast.makeText(context, getString(R.string.no_image_sel_toast), Toast.LENGTH_SHORT).show()
     }
 
-     fun sendImage() {
+    fun sendImage() {
         progressBar.progress = 0
         progressBar.visibility = View.VISIBLE
         val body = UploadRequestBody(photoFile!!, "multipart/form-data", this)
@@ -251,7 +269,7 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
             ) {
                 progressBar.progress = 100
                 progressBar.visibility = View.GONE
-               // Toast.makeText(context, getString(R.string.uploaded_toast), Toast.LENGTH_SHORT).show()
+                // Toast.makeText(context, getString(R.string.uploaded_toast), Toast.LENGTH_SHORT).show()
                 if (response.body() == 0)
                     tvArea.text = getString(R.string.area) + " 1"
                 else
@@ -263,7 +281,17 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
 
 
     private fun takePermission() {
-        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.R){
+
+
+        requestPermissions(
+                arrayOf(
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA
+                ), 2
+        )
+
+
+        /*if(Build.VERSION.SDK_INT == Build.VERSION_CODES.R){
             try {
                 val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
                 intent.addCategory("android.intent.category.DEFAULT")
@@ -274,30 +302,41 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
                 intent.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
                 startActivityForResult(intent, 1)
             }
-        }
-        else{
+        } else{
             requestPermissions(
                     arrayOf(
                             Manifest.permission.READ_EXTERNAL_STORAGE,
                             Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA
                     ), 2
             )
-        }
+        }*/
     }
 
     private fun isPermissionGranted(): Boolean {
-        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.R)
-            return Environment.isExternalStorageManager()
-        else{
-            val readExternalStoragePermission = ContextCompat.checkSelfPermission(
-                    context!!,
-                    arrayOf(
-                            Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE
-                    ).toString()
-            )
-            return readExternalStoragePermission == PackageManager.PERMISSION_GRANTED
-        }
+        /* if(Build.VERSION.SDK_INT == Build.VERSION_CODES.R)
+             return Environment.isExternalStorageManager()
+         else{
+             val readExternalStoragePermission = ContextCompat.checkSelfPermission(
+                     context!!,
+                     arrayOf(
+                             Manifest.permission.READ_EXTERNAL_STORAGE,
+                             Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE
+                     ).toString()
+             )
+
+
+             return readExternalStoragePermission == PackageManager.PERMISSION_GRANTED
+         }*/
+
+        val readExternalStoragePermission = ContextCompat.checkSelfPermission(
+                context!!,
+                arrayOf(
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ).toString()
+        )
+
+        return readExternalStoragePermission == PackageManager.PERMISSION_GRANTED
     }
 
     override fun onRequestPermissionsResult(
@@ -311,7 +350,10 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
             val readExtStorage = grantResults[0] == PackageManager.PERMISSION_GRANTED
             if(readExtStorage){
                 //Toast.makeText(context, "Perm granted", Toast.LENGTH_SHORT).show()
+                    if(btnCam)
                 openCamera()
+                if(btnGal)
+                    openGallery()
             }
             else{
                 takePermission()
@@ -319,9 +361,9 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
         }
     }
 
-     fun openCamera() {
+    fun openCamera() {
 
-         pressCam = false
+        pressCam = false
 
         reset()
         val camIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
@@ -358,7 +400,7 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
             if(requestCode == 1){
                 if(Build.VERSION.SDK_INT == Build.VERSION_CODES.R){
                     if(Environment.isExternalStorageManager()){
-                       // Toast.makeText(context, "perm granted", Toast.LENGTH_SHORT).show()
+                        // Toast.makeText(context, "perm granted", Toast.LENGTH_SHORT).show()
                         openCamera()
                     }
                 }
@@ -432,7 +474,7 @@ class PredictFragment() : Fragment(),UploadRequestBody.UploadCallback {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
         if(item.itemId == R.id.menuReset){
-           // Toast.makeText(context, "reset clicked", Toast.LENGTH_SHORT).show()
+            // Toast.makeText(context, "reset clicked", Toast.LENGTH_SHORT).show()
             /*val intent = Intent(activity, LangSelActivity::class.java)
             startActivity(intent)*/
 

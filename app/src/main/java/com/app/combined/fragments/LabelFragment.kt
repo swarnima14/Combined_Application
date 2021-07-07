@@ -70,6 +70,9 @@ class LabelFragment() : Fragment() {
     var pressGal = false
     var pressCam = false
 
+    var btnCam = false
+    var btnGal = false
+
     var list: MutableList<String> = ArrayList()
     var labelList: MutableList<String> = ArrayList()
 
@@ -185,6 +188,9 @@ class LabelFragment() : Fragment() {
         
         v.btnCapture.setOnClickListener(View.OnClickListener {
 
+            btnCam = true
+            btnGal = false
+
             if (isPermissionGranted()) {
                 //Toast.makeText(context, "Permission already granted", Toast.LENGTH_SHORT).show()
                 openCamera()
@@ -193,14 +199,18 @@ class LabelFragment() : Fragment() {
         })
 
         v.btnGallery.setOnClickListener {
+            btnCam = false
+            btnGal = true
             pressGal = false
-            reset()
 
-            var intent: Intent = Intent(Intent.ACTION_GET_CONTENT)
-            intent.type = "image/*"
+            if(isPermissionGranted())
+                openGallery()
+else
+    takePermission()
 
-            this.startActivityForResult(intent, 96)
         }
+
+
 
         v.ibSave.setOnClickListener {
 
@@ -275,9 +285,16 @@ class LabelFragment() : Fragment() {
 
 
     }
+    fun openGallery(){
+        reset()
+        var intent: Intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "image/*"
+
+        this.startActivityForResult(intent, 96)
+    }
 
     private fun takePermission() {
-        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.R){
+        /*if(Build.VERSION.SDK_INT == Build.VERSION_CODES.R){
             try {
                 val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
                 intent.addCategory("android.intent.category.DEFAULT")
@@ -289,20 +306,20 @@ class LabelFragment() : Fragment() {
                 startActivityForResult(intent, 1)
             }
         }
-        else{
+        else{*/
             requestPermissions(
                     arrayOf(
                             Manifest.permission.READ_EXTERNAL_STORAGE,
                             Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA
                     ), 2
             )
-        }
+
     }
 
     private fun isPermissionGranted(): Boolean {
-        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.R)
+       /* if(Build.VERSION.SDK_INT == Build.VERSION_CODES.R)
             return Environment.isExternalStorageManager()
-        else{
+        else{*/
             val readExternalStoragePermission = ContextCompat.checkSelfPermission(
                     context!!,
                     arrayOf(
@@ -311,7 +328,7 @@ class LabelFragment() : Fragment() {
                     ).toString()
             )
             return readExternalStoragePermission == PackageManager.PERMISSION_GRANTED
-        }
+
     }
 
 
@@ -326,7 +343,10 @@ class LabelFragment() : Fragment() {
             val readExtStorage = grantResults[0] == PackageManager.PERMISSION_GRANTED
             if(readExtStorage){
                 //Toast.makeText(context, "Perm granted", Toast.LENGTH_SHORT).show()
+                    if(btnCam)
                 openCamera()
+                if(btnGal)
+                    openGallery()
             }
             else{
                 takePermission()
